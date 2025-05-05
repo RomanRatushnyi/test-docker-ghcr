@@ -1,2 +1,11 @@
+sudo apt install gh // Linux
+brew install gh // MacOS
+Create new gh token with full acces (not fine-grained)
+gh auth login
+chmod +x ./deploy-check.sh
+
+stop app
+./deploy-check.sh
+
 docker compose up --build
 http://localhost:8080

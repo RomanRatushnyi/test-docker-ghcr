@@ -1,8 +1,13 @@
 #!/bin/bash
+
+export GH_TOKEN="" # read:packages & write:packages
+
 REPO_OWNER=romanratushnyi
 REPO_NAME=test-docker-ghcr
-IMAGE_NAME=ghcr.io/$REPO_OWNER/$REPO_NAME/synchronize-exact-app
+IMAGE_NAME=ghcr.io/$REPO_OWNER/$REPO_NAME
 CONTAINER_NAME=synchronize-exact-app
+
+echo $GH_TOKEN | docker login ghcr.io -u $REPO_OWNER --password-stdin
 
 CURRENT_VERSION=$(docker inspect --format '{{ index .Config.Image }}' "$CONTAINER_NAME" 2>/dev/null | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
 echo "Current version: $CURRENT_VERSION"
