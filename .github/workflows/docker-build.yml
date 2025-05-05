@@ -81,10 +81,10 @@ jobs:
 
       - name: Tag Docker image with version and latest
         run: |
-          docker tag synchronize-exact-app ghcr.io/${{ env.REPO_OWNER }}/synchronize-exact-app:v${{ env.VERSION }}
-          docker tag synchronize-exact-app ghcr.io/${{ env.REPO_OWNER }}/synchronize-exact-app:latest
-
+          docker tag synchronize-exact-app ghcr.io/${{ env.REPO_OWNER }}/${{ github.event.repository.name }}/synchronize-exact-app:v${{ env.VERSION }}
+          docker tag synchronize-exact-app ghcr.io/${{ env.REPO_OWNER }}/${{ github.event.repository.name }}/synchronize-exact-app:latest
+  
       - name: Push Docker images
         run: |
-          docker push ghcr.io/${{ env.REPO_OWNER }}/synchronize-exact-app:v${{ env.VERSION }}
-          docker push ghcr.io/${{ env.REPO_OWNER }}/synchronize-exact-app:latest
+          docker push ghcr.io/${{ env.REPO_OWNER }}/${{ github.event.repository.name }}/synchronize-exact-app:v${{ env.VERSION }}
+          docker push ghcr.io/${{ env.REPO_OWNER }}/${{ github.event.repository.name }}/synchronize-exact-app:latest
