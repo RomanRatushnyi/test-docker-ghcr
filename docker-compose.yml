@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: synchronize-exact-app
     volumes:
       - .:/app
     command: ["npm", "start"]
