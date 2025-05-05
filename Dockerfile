@@ -1,3 +1,10 @@
-FROM alpine:latest
-RUN echo "Hello, GitHub Container Registry!" > /hello.txt
-CMD ["cat", "/hello.txt"]
+FROM node:18
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+CMD ["npm", "start"]
