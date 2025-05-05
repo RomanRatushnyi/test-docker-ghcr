@@ -4,42 +4,87 @@ on:
   push:
     branches:
       - main
+      - roman-CEC-35-create-cd
 
 jobs:
-  lint:
-    name: Run Mega-Linter
-    runs-on: ubuntu-latest
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
 
-      - name: Run Mega-Linter
-        uses: oxsecurity/megalinter@v7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+  #     - name: Install dependencies
+  #       run: npm ci
+
+  #     - name: Run ESLint
+  #       run: npm run eslint
 
   build-and-push:
+    # needs: lint
     runs-on: ubuntu-latest
-
     permissions:
-      contents: read
+      contents: write
       packages: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Set repository owner to lowercase
         run: echo "REPO_OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      - name: Build Docker image
+      - name: Bump patch version in package.json
         run: |
-          docker build -t ghcr.io/${{ env.REPO_OWNER }}/test-image:latest .
+          CURRENT_VERSION=$(jq -r .version package.json)
+          BASE=$(echo "$CURRENT_VERSION" | cut -d. -f1-2)
+          PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$BASE.$NEW_PATCH"
+          echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          jq --arg v "$NEW_VERSION" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+          echo "Bumped version: $NEW_VERSION"
 
-      - name: Push Docker image
+      - name: Commit and push updated package.json
         run: |
-          docker push ghcr.io/${{ env.REPO_OWNER }}/test-image:latest
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add package.json
+          git commit -m "Bump version to v${VERSION} [skip ci]" || echo "Nothing to commit"
+          git push
+
+      - name: Auto-tag commit if not already tagged
+        run: |
+          TAG="v${VERSION}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists."
+          else
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "Created and pushed tag $TAG"
+          fi
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+      - name: Install Docker Compose
+        run: sudo apt-get install docker-compose -y
+
+      - name: Build Docker images
+        run: |
+          docker compose -f ./deploy/docker-compose-build.yml build
+
+      - name: Tag Docker image with version and latest
+        run: |
+          docker tag synchronize-exact-app ghcr.io/${{ env.REPO_OWNER }}/synchronize-exact-app:v${{ env.VERSION }}
+          docker tag synchronize-exact-app ghcr.io/${{ env.REPO_OWNER }}/synchronize-exact-app:latest
+
+      - name: Push Docker images
+        run: |
+          docker push ghcr.io/${{ env.REPO_OWNER }}/synchronize-exact-app:v${{ env.VERSION }}
+          docker push ghcr.io/${{ env.REPO_OWNER }}/synchronize-exact-app:latest
