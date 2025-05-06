@@ -9,7 +9,9 @@ CONTAINER_NAME=synchronize-exact-app
 
 echo $GH_TOKEN | docker login ghcr.io -u $REPO_OWNER --password-stdin
 
-CURRENT_VERSION=$(docker inspect --format '{{ index .Config.Image }}' "$CONTAINER_NAME" 2>/dev/null | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
+# Get version from container if Node.js is available
+# CURRENT_VERSION=$(docker exec "$CONTAINER_NAME" node -p "'v' + require('./package.json').version")
+CURRENT_VERSION="v$(jq -r .version package.json)"
 echo "Current version: $CURRENT_VERSION"
 
 LATEST_VERSION=$(gh api "users/$REPO_OWNER/packages/container/$REPO_NAME/versions" --paginate | jq -r '.[].metadata.container.tags[]' | grep '^v' | sort -V | tail -n1)
