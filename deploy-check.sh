@@ -1,7 +1,6 @@
 #!/bin/bash
 
 export GH_TOKEN="" # read:packages & write:packages
-git pull
 
 REPO_OWNER=romanratushnyi
 REPO_NAME=test-docker-ghcr
