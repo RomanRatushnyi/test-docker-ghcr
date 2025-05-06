@@ -77,7 +77,7 @@ jobs:
 
       - name: Build Docker images
         run: |
-          docker compose -f ./docker-compose.yml up --build -d
+          docker compose build
 
       - name: Tag Docker image with version and latest
         run: |

@@ -2,7 +2,7 @@ version: "3"
 services:
   app:
     build: .
-    image: synchronize-exact-app
+    image: ghcr.io/romanratushnyi/test-docker-ghcr:latest
     container_name: synchronize-exact-app
     ports:
       - "8080:80"
