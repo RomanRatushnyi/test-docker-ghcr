@@ -77,12 +77,13 @@ jobs:
 
       - name: Build Docker images
         run: |
-          docker compose build
+          docker build -t ghcr.io/${{ env.REPO_OWNER }}/${{ github.event.repository.name }}:latest .
 
-      - name: Tag Docker image with version and latest
+      - name: Tag Docker image with version
         run: |
-          docker tag synchronize-exact-app ghcr.io/${{ env.REPO_OWNER }}/${{ github.event.repository.name }}:v${{ env.VERSION }}
-          docker tag synchronize-exact-app ghcr.io/${{ env.REPO_OWNER }}/${{ github.event.repository.name }}:latest
+          docker tag ghcr.io/${{ env.REPO_OWNER }}/${{ github.event.repository.name }}:latest \
+            ghcr.io/${{ env.REPO_OWNER }}/${{ github.event.repository.name }}:v${{ env.VERSION }}
+
 
   
       - name: Push Docker images
