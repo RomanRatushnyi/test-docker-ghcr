@@ -19,7 +19,8 @@ if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
   echo "Updating to $LATEST_VERSION..."
   
   docker pull $IMAGE_NAME:$LATEST_VERSION
-  
+
+  docker stop $CONTAINER_NAME || true
   docker rm -f $CONTAINER_NAME || true
   
   docker run -d --name $CONTAINER_NAME -p 8080:80 $IMAGE_NAME:$LATEST_VERSION

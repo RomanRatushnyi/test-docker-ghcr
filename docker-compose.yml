@@ -2,6 +2,6 @@ version: "3"
 services:
   app:
     build: .
-    image: synchronize-exact-app
+    image: ghcr.io/romanratushnyi/test-docker-ghcr # проверить, нужно ли реально будет переименовывать image на проекте или сработает docker tag
     ports:
       - "8080:80"
