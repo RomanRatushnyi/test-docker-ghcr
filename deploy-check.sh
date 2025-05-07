@@ -12,7 +12,7 @@ echo $GH_TOKEN | docker login ghcr.io -u $REPO_OWNER --password-stdin
 CURRENT_VERSION=""
 if docker ps -a --format '{{.Names}}' | grep -q "^$CONTAINER_NAME$"; then
   echo "Trying to get version from container $CONTAINER_NAME..."
-  CURRENT_VERSION=$(docker exec "$CONTAINER_NAME" node -p "'v' + require('./package.json').version" 2>/dev/null || true)
+  CURRENT_VERSION=$(docker inspect --format '{{ index .Config.Image }}' "$CONTAINER_NAME" 2>/dev/null | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
 else
   echo "Container $CONTAINER_NAME not found."
 fi
@@ -27,12 +27,13 @@ if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
   docker compose pull
 
   docker tag "$IMAGE_NAME:$LATEST_VERSION" "$IMAGE_NAME:latest"
-
-  docker images --filter "reference=$IMAGE_NAME" --format "{{.ID}} {{.Repository}}" | grep -E "$IMAGE_NAME\s" | grep "<none>" | awk '{print $1}' | xargs -r docker rmi -f
   
   docker compose down
   
   docker compose up -d
+  
+  docker images --filter "dangling=true" -q | xargs -r docker rmi -f
+  docker images --format "{{.ID}} {{.Repository}}:{{.Tag}}" | grep "<none>:<none>" | awk '{print $1}' | xargs -r docker rmi -f
 else
   echo "No update needed."
 fi
