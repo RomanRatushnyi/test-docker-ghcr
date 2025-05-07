@@ -1,12 +1,10 @@
-FROM node:20-alpine
-
-RUN apk add --no-cache nginx
+FROM node:20
 
 WORKDIR /app
 COPY . .
-RUN npm install && npm run build
 
-RUN mkdir -p /var/www/html && cp -r dist/* /var/www/html/
+RUN npm install && npm run build \
+  && npm install -g serve
 
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["serve", "-s", "dist", "-l", "80"]

@@ -13,11 +13,10 @@ CURRENT_VERSION=""
 if docker ps -a --format '{{.Names}}' | grep -q "^$CONTAINER_NAME$"; then
   echo "Trying to get version from container $CONTAINER_NAME..."
   CURRENT_VERSION=$(docker exec "$CONTAINER_NAME" node -p "'v' + require('./package.json').version" 2>/dev/null || true)
-  echo "Current version: ${CURRENT_VERSION:-<unknown>}"
 else
   echo "Container $CONTAINER_NAME not found."
 fi
-echo "Current version: $CURRENT_VERSION"
+echo "Current version: ${CURRENT_VERSION:-<unknown>}"
 
 LATEST_VERSION=$(gh api "users/$REPO_OWNER/packages/container/$REPO_NAME/versions" --paginate | jq -r '.[].metadata.container.tags[]' | grep '^v' | sort -V | tail -n1)
 echo "Latest version in GHCR: $LATEST_VERSION"
@@ -26,6 +25,12 @@ if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
   echo "Updating to $LATEST_VERSION..."
   
   docker compose pull
+
+  docker tag "$IMAGE_NAME:$LATEST_VERSION" "$IMAGE_NAME:latest"
+
+  docker images "$IMAGE_NAME" --format "{{.Repository}}:{{.Tag}}" | \
+  grep -v -E "($LATEST_VERSION|latest)" | \
+  xargs -r docker rmi
   
   docker compose down
   
