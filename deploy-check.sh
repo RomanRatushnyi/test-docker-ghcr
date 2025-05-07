@@ -10,12 +10,17 @@ CONTAINER_NAME=synchronize-exact-app
 echo $GH_TOKEN | docker login ghcr.io -u $REPO_OWNER --password-stdin
 
 CURRENT_VERSION=""
+
 if docker ps -a --format '{{.Names}}' | grep -q "^$CONTAINER_NAME$"; then
   echo "Trying to get version from container $CONTAINER_NAME..."
   CURRENT_VERSION=$(docker inspect --format '{{ index .Config.Image }}' "$CONTAINER_NAME" 2>/dev/null | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
-else
-  echo "Container $CONTAINER_NAME not found."
 fi
+
+if [ -z "$CURRENT_VERSION" ]; then
+  echo "Container not running or version not detected. Checking images..."
+  CURRENT_VERSION=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$IMAGE_NAME:v" | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' | sort -V | tail -n1)
+fi
+
 echo "Current version: ${CURRENT_VERSION:-<unknown>}"
 
 LATEST_VERSION=$(gh api "users/$REPO_OWNER/packages/container/$REPO_NAME/versions" --paginate | jq -r '.[].metadata.container.tags[]' | grep '^v' | sort -V | tail -n1)
