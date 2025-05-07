@@ -28,9 +28,7 @@ if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
 
   docker tag "$IMAGE_NAME:$LATEST_VERSION" "$IMAGE_NAME:latest"
 
-  docker images "$IMAGE_NAME" --format "{{.Repository}}:{{.Tag}}" | \
-  grep -v -E "($LATEST_VERSION|latest)" | \
-  xargs -r docker rmi
+  docker image prune -f
   
   docker compose down
   
