@@ -1,9 +1,12 @@
-FROM node:20 AS build
+FROM node:20-alpine
+
+RUN apk add --no-cache nginx
+
 WORKDIR /app
 COPY . .
 RUN npm install && npm run build
 
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
+RUN mkdir -p /var/www/html && cp -r dist/* /var/www/html/
+
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
