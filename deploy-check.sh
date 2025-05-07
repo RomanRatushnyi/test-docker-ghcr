@@ -28,11 +28,18 @@ if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
 
   docker tag "$IMAGE_NAME:$LATEST_VERSION" "$IMAGE_NAME:latest"
 
-  docker image prune -f
+  OLD_IMAGE_ID=$(docker images --filter "reference=$IMAGE_NAME" --filter "before=$IMAGE_NAME:$LATEST_VERSION" -q)
   
   docker compose down
   
   docker compose up -d
+
+  if [ -n "$OLD_IMAGE_ID" ]; then
+    echo "Removing old image $OLD_IMAGE_ID..."
+    docker rmi -f "$OLD_IMAGE_ID"
+  else
+    echo "No old image to remove."
+  fi
 else
   echo "No update needed."
 fi
